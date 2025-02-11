@@ -1,0 +1,51 @@
+{
+	"paper": "A4L",
+	"crop": "10",
+	"origin": "UpperLeft",
+	"contentBox": true,
+	"debug": false,
+	"guides": true,
+	"dirs": {
+		"images": "../../testdata/resources"
+	},
+	"fonts": {
+		"myCourier": {
+			"name": "Courier",
+			"size": 5,
+			"col": "#000000"
+		}
+	},
+	"pages": {
+		"1": {
+			"content": {
+				"text": [
+					{
+						"value": " ",
+						"pos": [
+							0,
+							132
+						],
+						"font": {
+							"name": "$myCourier"
+						},
+						"bgcol": "#000000",
+						"width":842
+					},
+					{
+						"value": "<",
+						"pos": [
+							800,
+							132
+						],
+						"font": {
+							"name": "$myCourier",
+							"color": "#FF0000"
+						}
+					}
+				]
+
+				
+			}
+		}
+	}
+}

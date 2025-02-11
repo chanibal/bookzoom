@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ $# < 1 ]]; then
+	echo "Syntax: $0 <input.pdf> [output.pdf]"
+	exit 1
+fi
+
+input="$1"
+output="${2:-$1-done.pdf}"
+
+out="$(mktemp -d -p .)"
+mkdir -p "$out/split" "$out/resized" "$out/cropped"
+at_exit() {
+	rm -r -- "$out"
+}
+trap at_exit EXIT
+
+cp "$input" "$out/p.pdf"
+pdfcpu split "$out/p.pdf" "$out/split"
+
+pages=()
+first=1
+
+while read -r f; do
+	split="$out/split/p_$f"
+	resized="$out/resized/p_$f"
+	cropped="$out/cropped/p_$f"
+	cropped_top="$out/cropped/p_$f.top.pdf"
+	cropped_bottom="$out/cropped/p_$f.bottom.pdf"
+
+	if [[ "$first" == 1 ]]; then
+		first=0
+		title="$out/title.pdf"
+		pdfcpu resize "form:A4L" "$split" "$title"
+		pages+=("$title")		
+	fi
+
+	pdfcpu resize -u mm "dim:297 0" "$split" "$resized"
+	pdfcpu crop -u mm "pos:tl, dim:297 210" "$resized" "$cropped_top"
+	pdfcpu crop -u mm "pos:bl, dim:297 210" "$resized" "$cropped_bottom"
+	if [[ -f "stamp.pdf" ]]; then
+		pdfcpu stamp add -mode pdf "stamp.pdf:1" "rot:0, opacity:0.3, scale:1, pos:tc" "$cropped_bottom"
+	fi
+	pdfcpu merge "$cropped" "$cropped_top" "$cropped_bottom"
+	pdfcpu resize "form:A4L" "$cropped"
+	pages+=("$cropped")
+done < <(cd "$out/split"; ls | sed 's/p_//' | sort -n)
+pdfcpu merge "$output" ${pages[*]}
